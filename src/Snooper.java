@@ -86,17 +86,40 @@ class Snooper extends JPanel implements ActionListener {
     	content.setText("");	// empty the content first
     	try {
     		ResultSet answer = patrol.getTables(null, null, null, null);
+    		ResultSet columns = patrol.getColumns(null, null, name, null); // table attributes 
+    		ResultSetMetaData rsmd = columns.getMetaData();
+    		int columnsNumber = rsmd.getColumnCount();
+    		
+    		String column_name, type_name, column_size;
+    		
     		while (answer.next()) {
-                if (answer.wasNull() == false) {
-                	if (name.equalsIgnoreCase(answer.getString("TABLE_NAME")) == true) {
-                		content.append("CATEGORY = " + answer.getString("TABLE_CAT") + '\n');
-                		content.append("TYPE = " + answer.getString("TABLE_TYPE") + '\n');
-                		content.append("SCHEMA = " + answer.getString("TABLE_SCHEM") + '\n');
-                		content.append("REMARKS = " + answer.getString("REMARKS"));
+                if (!answer.wasNull() && name.equalsIgnoreCase(answer.getString("TABLE_NAME"))) {
+                		
+                	content.append("CATEGORY = " + answer.getString("TABLE_CAT") + '\n');
+                	content.append("TYPE = " + answer.getString("TABLE_TYPE") + '\n');
+                	content.append("SCHEMA = " + answer.getString("TABLE_SCHEM") + '\n');
+                	content.append("REMARKS = " + answer.getString("REMARKS") + "\n\n");
+
+            		while (columns.next()) {
+            			// Attributs de la table            		
+            		    for (int i = 0; i <= columnsNumber; i+=16) {
+            		    	//if(name.equalsIgnoreCase(rsmd.getTableName(i))) {
+            		    		
+            		    		column_name = columns.getString(i+4);
+                    			type_name = columns.getString(i+6); 
+                    			column_size = columns.getString(i+7);
+//
+                    			content.append(column_name + " " + type_name + "(" + column_size + ") \n" );
+//                		        String columnValue = columns.getString(i);
+//                 		        content.append(columnValue + " " + rsmd.getColumnName(i) + "\n");
+            		    	//}     
+            		    }
+
                 	}
+                
                 }
     		}
-    	}catch (SQLException e) {
+    	} catch (SQLException e) {
     		System.out.println("Meta data error");
         }
     }
