@@ -6,86 +6,144 @@ import javax.swing.*;
 
 class Snooper extends JPanel implements ActionListener {
 	JLabel index;
-	JComboBox tableList;
-	String tableNames[], tableNamesAsOne;
+	JComboBox userTableList;
+	JComboBox otherTableList;
+	JComboBox otherTableSysList;
+	String userTableNames[], otherTableNames[], otherTableSysNames[];
+	String userTable = "";
+	String otherTable = "";
+	String otherTableSys = "";
 	JLabel id;
 	TextArea content;
 
-    Connection link;
-    String myURL = "jdbc:odbc:";
-    java.sql.DatabaseMetaData patrol;
-    
+	Connection link;
+	String myURL = "jdbc:odbc:";
+	java.sql.DatabaseMetaData patrol;
+
 	/*	***********	*/
 	/*	CONSTRUCTOR	*/
 	/*	***********	*/
-    
-    public Snooper(String sourceDB) throws SQLException, ClassNotFoundException {
-    	super(new BorderLayout());
-        connect(sourceDB);
-    	inspect(sourceDB);
-    }
-    
+
+	public Snooper(String sourceDB) throws SQLException, ClassNotFoundException {
+		super(new BorderLayout());
+		connect(sourceDB);
+		inspect(sourceDB);
+	}
+
 	/*	***************************	*/
 	/*	CONNECTING TO THE DATA BASE	*/
 	/*	***************************	*/
-    
-    public void connect(String source) throws ClassNotFoundException {
-    	try {
-    		Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
-    		link = DriverManager.getConnection(myURL+source);
-    	} catch (SQLException e) {
-    		System.out.println("Connection error: " + e.getMessage());
-    	}
-    }
+
+	public void connect(String source) throws ClassNotFoundException {
+		try {
+			Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+			link = DriverManager.getConnection(myURL+source);
+		} catch (SQLException e) {
+			System.out.println("Connection error: " + e.getMessage());
+		}
+	}
 
 	/*	***********************************	*/
 	/*	INSPECTING THE DATA BASE STRUCTURE	*/
 	/*	***********************************	*/
-    
-    public void inspect(String source) throws SQLException {
-        patrol = link.getMetaData();
-        id = new JLabel("DATA BASE " + source + " (User: " + patrol.getUserName() + ")");
-        add(id,BorderLayout.NORTH);
-        add(new JLabel("TABLES: "),BorderLayout.WEST);
-        ResultSet answer = patrol.getTables(null, null, null, null);
-        while (answer.next()) {
-                if (answer.wasNull() == false) {
-                	tableNamesAsOne = tableNamesAsOne + answer.getString("TABLE_NAME") + " ";
-                }
-        }
-        answer.close();
-        StringTokenizer st = new StringTokenizer(tableNamesAsOne," ");
-        tableNames = new String[st.countTokens()];
-    	while (st.hasMoreTokens()) {
-    		tableNames[st.countTokens()-1] = st.nextToken();
-    	}
-    	tableList = new JComboBox(tableNames);
-        tableList.setSelectedIndex(0);
-        tableList.addActionListener(this);
-    	add(tableList, BorderLayout.EAST);
-    	content = new TextArea();
-    	add(content, BorderLayout.SOUTH);
-    	updateFields(tableNames[tableList.getSelectedIndex()]);
-    }
-    
+
+	public void inspect(String source) throws SQLException {
+		patrol = link.getMetaData();
+		JPanel northPanel = new JPanel(new BorderLayout());    
+		id = new JLabel("DATA BASE " + source + " (User: " + patrol.getUserName() + ")");
+		northPanel.add(id,BorderLayout.NORTH);
+		northPanel.add(new JLabel("TABLES : "),BorderLayout.WEST);
+
+		JPanel southPanel = new JPanel(new BorderLayout());    
+		southPanel.add(new JLabel("AUTRES TABLES : "),BorderLayout.WEST);
+		JButton b = new JButton("Quitter"); 
+		b.addActionListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent e)
+		    {
+		       
+		    }
+		});
+		southPanel.add(b);
+		
+
+		System.out.println(userTable);
+
+		ResultSet answer = patrol.getTables(null, null, null, null);
+		while (answer.next()) {
+			if (answer.wasNull() == false) {
+				String tableName = answer.getString("TABLE_NAME");
+				if (answer.getString("TABLE_TYPE").equals("SYSTEM TABLE")==true) {
+					otherTableSys = otherTableSys + " " + tableName;
+				} else {
+					if (tableName.contains("~")) {
+						otherTable = otherTable + " " + tableName;
+					} else {
+						userTable = userTable + " " + tableName;
+					}
+				}
+			}
+		}
+		answer.close();
+
+		StringTokenizer st2 = new StringTokenizer(otherTable," ");
+		StringTokenizer st3 = new StringTokenizer(otherTableSys," ");
+		StringTokenizer st = new StringTokenizer(userTable," ");
+		otherTableNames = new String[st2.countTokens()];
+		otherTableSysNames = new String[st3.countTokens()];
+		userTableNames = new String[st.countTokens()];
+		while (st2.hasMoreTokens()) {
+			otherTableNames[st2.countTokens()-1] = st2.nextToken();
+		}
+		while (st3.hasMoreTokens()) {
+			otherTableSysNames[st3.countTokens()-1] = st3.nextToken();
+		}
+		while (st.hasMoreTokens()) {
+			userTableNames[st.countTokens()-1] = st.nextToken();
+		}
+		otherTableList = new JComboBox(otherTableNames);
+		otherTableList.insertItemAt("Table",0);
+		otherTableList.setSelectedIndex(0);
+		otherTableList.addActionListener(this);
+		otherTableSysList = new JComboBox(otherTableSysNames);
+		otherTableSysList.insertItemAt("System Table",0);
+		otherTableSysList.setSelectedIndex(0);
+		otherTableSysList.addActionListener(this);
+		userTableList = new JComboBox(userTableNames);
+		userTableList.setSelectedIndex(0);
+		userTableList.addActionListener(this);
+		southPanel.add(otherTableList, BorderLayout.EAST);
+		southPanel.add(otherTableSysList, BorderLayout.CENTER);
+		northPanel.add(userTableList, BorderLayout.EAST);
+
+		content = new TextArea();
+		add(content, BorderLayout.CENTER);
+
+		updateFields(otherTableNames[otherTableList.getSelectedIndex()]);
+		updateFields(otherTableSysNames[otherTableSysList.getSelectedIndex()]);
+		updateFields(userTableNames[userTableList.getSelectedIndex()]);
+
+		add(northPanel, BorderLayout.NORTH);
+		add(southPanel, BorderLayout.SOUTH);
+	}
+
 	/*	***************************	*/
 	/*	LISTENING TO THE COMBO BOX	*/
 	/*	***************************	*/
-    
-    public void actionPerformed(ActionEvent e) {
-    	JComboBox cb = (JComboBox)e.getSource();
-    	String tableName = (String)cb.getSelectedItem();
-    	updateFields(tableName);
-    }
-        
+
+	public void actionPerformed(ActionEvent e) {
+		JComboBox cb = (JComboBox)e.getSource();
+		String tableName = (String)cb.getSelectedItem();
+		updateFields(tableName);
+	}
+
 	/*	***********************	*/
 	/*	UPDATING THE FIELD LIST	*/
 	/*	***********************	*/
-    
-    protected void updateFields(String name) {
-    	content.setText("");	// empty the content first
-    	try {
-    		ResultSet answer = patrol.getTables(null, null, null, null);
+
+	protected void updateFields(String name) {
+		content.setText("");	// empty the content first
+		try {
+			ResultSet answer = patrol.getTables(null, null, null, null);
     		ResultSet columns = patrol.getColumns(null, null, name, null); // table attributes 
     		
     		String column_name, type_name, column_size, primary_key;
@@ -110,29 +168,37 @@ class Snooper extends JPanel implements ActionListener {
                 
                 }
     		}
-    	} catch (SQLException e) {
-    		System.out.println("Meta data error");
-        }
-    }
-    
-    private static void createAndShowGUI(String source) throws SQLException, ClassNotFoundException {
-    	//Create and set up the window.
-    	JFrame frame = new JFrame("Snooper");
-    	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    	//Create and set up the content pane.
-    	JComponent newContentPane = new Snooper(source);
-    	newContentPane.setOpaque(true);
-    	frame.setContentPane(newContentPane);
-    	//Display the window.
-    	frame.pack();
-    	frame.setVisible(true);
-    }
-    
+		}catch (SQLException e) {
+			System.out.println("Meta data error");
+		}
+	}
+
+	private static void createAndShowGUI(String source) throws SQLException, ClassNotFoundException {
+		//Create and set up the window.
+		JFrame frame = new JFrame("Snooper");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//Create and set up the content pane.
+		JComponent newContentPane = new Snooper(source);
+		newContentPane.setOpaque(true);
+		frame.setContentPane(newContentPane);
+		//Display the window.
+		frame.pack();
+		//Make the frame half the height and width
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		int height = screenSize.height;
+		int width = screenSize.width;
+		frame.setSize(width/2, height/2);
+
+		// here's the part where i center the jframe on screen
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+	}
+
 	/*	***********	*/
 	/*	LAUNCHING	*/
 	/*	***********	*/
-    
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+
+	public static void main(String[] args) throws SQLException, ClassNotFoundException {
 		createAndShowGUI("AirLine");
-    }
+	}
 }
