@@ -88,7 +88,7 @@ class Snooper extends JPanel implements ActionListener {
     		ResultSet answer = patrol.getTables(null, null, null, null);
     		ResultSet columns = patrol.getColumns(null, null, name, null); // table attributes 
     		
-    		String column_name, type_name, column_size;
+    		String column_name, type_name, column_size, primary_key;
     		
     		while (answer.next()) {
                 if (!answer.wasNull() && name.equalsIgnoreCase(answer.getString("TABLE_NAME"))) {
@@ -101,11 +101,11 @@ class Snooper extends JPanel implements ActionListener {
                 	// Attributs de la table   
             		while (columns.next()) {
             			         		  		
-            		    		column_name = columns.getString(4); // nom de colonne
-                    			type_name = columns.getString(6);   // type de donnée
-                    			column_size = columns.getString(7); // taille de donnée
+            			column_name = columns.getString(4); // nom de colonne
+            			type_name = columns.getString(6);   // type de donnée
+            			column_size = columns.getString(7); // taille de donnée
 
-                    			content.append(column_name + " " + type_name + "(" + column_size + ") \n" );
+            			content.append(column_name + " " + type_name + "(" + column_size + ") \n" );
                 	}
                 
                 }
