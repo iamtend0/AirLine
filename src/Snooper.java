@@ -148,6 +148,7 @@ class Snooper extends JPanel implements ActionListener {
 		try {
 			ResultSet answer = patrol.getTables(null, null, null, null);
     		ResultSet columns = patrol.getColumns(null, null, name, null); // table attributes 
+    		ResultSet primary_key = patrol.getIndexInfo(null, null, name, true, true); // table description
     		
     		String column_name, type_name, column_size, nullable;
     		
@@ -179,6 +180,7 @@ class Snooper extends JPanel implements ActionListener {
     		}
 		}catch (SQLException e) {
 			System.out.println("Meta data error");
+			//e.printStackTrace();
 		}
 	}
 
