@@ -87,8 +87,6 @@ class Snooper extends JPanel implements ActionListener {
     	try {
     		ResultSet answer = patrol.getTables(null, null, null, null);
     		ResultSet columns = patrol.getColumns(null, null, name, null); // table attributes 
-    		ResultSetMetaData rsmd = columns.getMetaData();
-    		int columnsNumber = rsmd.getColumnCount();
     		
     		String column_name, type_name, column_size;
     		
@@ -100,21 +98,14 @@ class Snooper extends JPanel implements ActionListener {
                 	content.append("SCHEMA = " + answer.getString("TABLE_SCHEM") + '\n');
                 	content.append("REMARKS = " + answer.getString("REMARKS") + "\n\n");
 
+                	// Attributs de la table   
             		while (columns.next()) {
-            			// Attributs de la table            		
-            		    for (int i = 0; i <= columnsNumber; i+=16) {
-            		    	//if(name.equalsIgnoreCase(rsmd.getTableName(i))) {
-            		    		
-            		    		column_name = columns.getString(i+4);
-                    			type_name = columns.getString(i+6); 
-                    			column_size = columns.getString(i+7);
-//
-                    			content.append(column_name + " " + type_name + "(" + column_size + ") \n" );
-//                		        String columnValue = columns.getString(i);
-//                 		        content.append(columnValue + " " + rsmd.getColumnName(i) + "\n");
-            		    	//}     
-            		    }
+            			         		  		
+            		    		column_name = columns.getString(4); // nom de colonne
+                    			type_name = columns.getString(6);   // type de donnée
+                    			column_size = columns.getString(7); // taille de donnée
 
+                    			content.append(column_name + " " + type_name + "(" + column_size + ") \n" );
                 	}
                 
                 }
