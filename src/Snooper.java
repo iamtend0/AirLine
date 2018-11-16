@@ -50,20 +50,23 @@ class Snooper extends JPanel implements ActionListener {
 	public void inspect(String source) throws SQLException {
 		patrol = link.getMetaData();
 		JPanel northPanel = new JPanel(new BorderLayout());    
+		JLabel titre_lien = new JLabel("Nom de la base de données : " ); 
+	    JTextField champ_lien = new JTextField(10); 
 		id = new JLabel("DATA BASE " + source + " (User: " + patrol.getUserName() + ")");
 		northPanel.add(id,BorderLayout.NORTH);
 		northPanel.add(new JLabel("TABLES : "),BorderLayout.WEST);
 
 		JPanel southPanel = new JPanel(new BorderLayout());    
 		southPanel.add(new JLabel("AUTRES TABLES : "),BorderLayout.WEST);
-		JButton b = new JButton("Quitter"); 
-		b.addActionListener(new ActionListener() {
+		
+		JButton quit = new JButton("Quitter"); 
+		quit.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e)
 		    {
-		       
+		    	System.exit(0);
 		    }
 		});
-		southPanel.add(b);
+		southPanel.add(quit, BorderLayout.SOUTH);
 		
 
 		System.out.println(userTable);
@@ -72,7 +75,7 @@ class Snooper extends JPanel implements ActionListener {
 		while (answer.next()) {
 			if (answer.wasNull() == false) {
 				String tableName = answer.getString("TABLE_NAME");
-				if (answer.getString("TABLE_TYPE").equals("SYSTEM TABLE")==true) {
+				if (answer.getString("TABLE_TYPE").equals("SYSTEM TABLE")== true) {
 					otherTableSys = otherTableSys + " " + tableName;
 				} else {
 					if (tableName.contains("~")) {
@@ -146,7 +149,7 @@ class Snooper extends JPanel implements ActionListener {
 			ResultSet answer = patrol.getTables(null, null, null, null);
     		ResultSet columns = patrol.getColumns(null, null, name, null); // table attributes 
     		
-    		String column_name, type_name, column_size, primary_key;
+    		String column_name, type_name, column_size, nullable;
     		
     		while (answer.next()) {
                 if (!answer.wasNull() && name.equalsIgnoreCase(answer.getString("TABLE_NAME"))) {
@@ -162,8 +165,14 @@ class Snooper extends JPanel implements ActionListener {
             			column_name = columns.getString(4); // nom de colonne
             			type_name = columns.getString(6);   // type de donnée
             			column_size = columns.getString(7); // taille de donnée
+            			nullable = columns.getString(18);   // nullable
 
-            			content.append(column_name + " " + type_name + "(" + column_size + ") \n" );
+            			if (nullable.equals("NO")) { // if NOT NULL
+            				content.append(column_name + " " + type_name + "(" + column_size + ") NOT NULL\n" );
+            			} else {
+            				content.append(column_name + " " + type_name + "(" + column_size + ")\n" );
+            			}
+            			
                 	}
                 
                 }
